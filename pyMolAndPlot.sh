@@ -5,7 +5,8 @@ pdbIDs=('5con' '5coo' '5cop' '4hla' '5bry' '5bs4' '4hdp' '5dgw' )
 target="5dgu"
 echo $target
 echo ${pdbIDs[@]}
-echo ${#pdbIDs[@]}
+numPDBs = ${#pdbIDs[@]}
+echo $numPDBs
 
 #fetcch the target pdbID
 echo "fetch 5dgu, async=0" > pymolCmnds.pml
@@ -28,22 +29,22 @@ pymol pymolCmnds.pml -qc
 #retrieve the CA atom IDs of the residues 25 and 51 of chain A of all structures
 for i in `seq 0 7`;
 do
- aa25x[$i]=`grep "A 25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $7}'`
- aa25y[$i]=`grep "A 25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $8}'`
- aa25z[$i]=`grep "A 25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $9}'`
+ aa25x[$i]=`grep "A  25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $7}'`
+ aa25y[$i]=`grep "A  25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $8}'`
+ aa25z[$i]=`grep "A  25" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $9}'`
 
- aa51x[$i]=`grep "A 51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $7}'`
- aa51y[$i]=`grep "A 51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $8}'`
- aa51z[$i]=`grep "A 51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $9}'`
+ aa51x[$i]=`grep "A  51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $7}'`
+ aa51y[$i]=`grep "A  51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $8}'`
+ aa51z[$i]=`grep "A  51" ${pdbIDs[$i]}_aligned.pdb | grep "ATOM" | grep "CA" | head -1 | awk '{print $9}'`
 done
 
 #perform flap/active site distance calcs
-for i in `seq 0 7`
+for i in `seq 0 7`;
 do
- d=`echo "(${aa51x[$i]}-${aa25x[$i]}^2+(${aa51y[$i]}-${aa25y[$i]})^2+($aa51z[$i]}-${aa25z[$i]})^2" | bc`
+ d=`echo "(${aa51x[$i]} - ${aa25x[$i]})^2 + (${aa51y[$i]} - ${aa25y[$i]})^2 + (${aa51z[$i]} - ${aa25z[$i]})^2" | bc`
  distance[$i]=`echo "sqrt($d)" | bc`
 done
-
+echo ${distance[@]}
 #make gnuplot data file
 rm gnuplotData.txt
 for i in `seq 0 7`;
@@ -55,10 +56,12 @@ done
 echo "set term png" > gnuplot.gpl
 echo "set output 'flapCatSitePlot.png'" >> gnuplot.gpl
 echo "set xrange[0:9]" >> gnuplot.gpl
+
 # to-do: add an x label, y label, and title for the plot
-set xlabel {"X"}
-set ylabel {"Y"}
-set title {"Title"}
+echo "set xlabel 'structure'" >> gnuplot.gpl
+echo "set ylabel 'sep distance - angstroms'" >> gnuplot.gpl
+echo "set title 'Flap-catalytic site separation distance, 8 HIV-1 protease variants'" >> gnuplot.gpl
+
 #make xtic labels and generate the plot, and invoke gnuplot
 xticsString="("
 for i in `seq 0 7`;
